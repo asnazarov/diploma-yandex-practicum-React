@@ -1,0 +1,10 @@
+.main__title{
+    font-size: 100px;
+    background-color: #5ccccc;
+    border: 1px solid red;
+    display: flex;
+}
+
+.main__img {
+    max-width: 30%;
+}

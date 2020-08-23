@@ -1,62 +1,55 @@
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const path = require('path');
 const webpack = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const WebpackMd5Hash = require('webpack-md5-hash');
-const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const WebpackMd5Hash = require('webpack-md5-hash');  // плагин для хеширования
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin');
 const isDev = process.env.NODE_ENV === 'development';
 
+
 module.exports = {
-  entry: {main: './src/js/index.js'},
+  entry: {
+    main: './src/index.js'
+  },
   output: {
     path: path.resolve(__dirname, 'dist'),
     filename: '[name].[chunkhash].js'
   },
   module: {
     rules: [{
-      test: /\.js$/,
+      test: /\.(js|jsx)$/,
       exclude: /node_modules/,
       use: {
-        loader: "babel-loader",
-        options: {
-          presets: [
-            '@babel/preset-env',
-            "@babel/preset-react"
-          ]
-          // plugins: ['babel/plugin-proposal-class-properties']
-        }
+        loader: "babel-loader"
       }
     },
       // {
-      //     test: /\.jsx$/,
-      //     exclude: /node_modules/,
-      //     use: {
-      //         loader: "babel-loader",
-      //         options: {
-      //             presets: [
-      //               '@babel/preset-env',
-      //               "@babel/preset-react"
-      //             ]
-      //             // plugins: ['babel/plugin-proposal-class-properties']
-      //         }
-      //     }
+      //   test: /\.css$/,
+      //   use: [MiniCssExtractPlugin.loader, 'css-loader']
       // },
       {
         test: /\.css$/i,
         use: [
-          isDev ? "style-loader" : MiniCssExtractPlugin.loader,
-          "css-loader",
-          "postcss-loader",
-        ],
+          (isDev ? 'style-loader' : MiniCssExtractPlugin.loader),
+          'css-loader',
+          'postcss-loader'
+        ]
       },
+      // пример настройки плагина image-webpack-loader
       {
-        test: /\.(png|jpe?g|svg|gif)$/i,
-        use: [{
-          loader: 'file-loader',
-          options: {
-            esModule: false,
+        test: /\.(gif|png|jpe?g|svg|ico)$/,
+        use: [
+          'file-loader?name=./images/[name].[ext]', // указали папку, куда складывать изображения
+
+          {
+            loader: 'image-webpack-loader',
+            // loader: 'file-loader',
+            options: {
+              outputPath: 'images',
+              esModule: false,
+            }
           },
-        },],
+        ]
       },
       {
         test: /\.(eot|ttf|woff|woff2)$/,
@@ -65,8 +58,20 @@ module.exports = {
     ]
   },
   plugins: [
-    new MiniCssExtractPlugin({ //
+    new MiniCssExtractPlugin({
       filename: 'style.[contenthash].css',
+    }),
+
+    new HtmlWebpackPlugin({
+      // Означает, что:
+      inject: false, // стили НЕ нужно прописывать внутри тегов
+      // hash: true, // для страницы нужно считать хеш
+      template: './public/index.html', // откуда брать образец для сравнения с текущим видом проекта
+      filename: 'index.html' // имя выходного файла, то есть того, что окажется в папке dist после сборки
+    }),
+    new WebpackMd5Hash(),
+    new webpack.DefinePlugin({
+      'NODE_ENV': JSON.stringify(process.env.NODE_ENV)
     }),
     new OptimizeCssAssetsPlugin({
       assetNameRegExp: /\.css$/g,
@@ -76,14 +81,5 @@ module.exports = {
       },
       canPrint: true
     }),
-    new HtmlWebpackPlugin({
-      inject: false,
-      template: './src/index.html',
-      filename: 'index.html'
-    }),
-    new WebpackMd5Hash(),
-    new webpack.DefinePlugin({
-      'NODE_ENV': JSON.stringify(process.env.NODE_ENV)
-    })
   ]
 };
